@@ -19,6 +19,7 @@ let isLoggedIn = false;
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
     checkLoginStatus();
+    debugLogger.log('APP_INIT', { message: 'Crystal Dating App started' });
 });
 
 function initializeEventListeners() {
@@ -28,6 +29,7 @@ function initializeEventListeners() {
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             currentMode = e.currentTarget.dataset.mode;
+            debugLogger.trackInteraction('MODE_CHANGE', { mode: currentMode });
             loadFeed();
         });
     });
@@ -35,16 +37,26 @@ function initializeEventListeners() {
     // User selector
     document.getElementById('currentUserId').addEventListener('change', (e) => {
         currentUserId = parseInt(e.target.value);
+        debugLogger.trackInteraction('USER_CHANGE', { userId: currentUserId });
         loadUserStats();
         loadFeed();
     });
 
     // Swipe buttons
-    document.getElementById('passBtn').addEventListener('click', () => handleSwipe('left'));
-    document.getElementById('likeBtn').addEventListener('click', () => handleSwipe('right'));
+    document.getElementById('passBtn').addEventListener('click', () => {
+        debugLogger.trackInteraction('SWIPE_PASS', { direction: 'left' });
+        handleSwipe('left');
+    });
+    document.getElementById('likeBtn').addEventListener('click', () => {
+        debugLogger.trackInteraction('SWIPE_LIKE', { direction: 'right' });
+        handleSwipe('right');
+    });
 
     // Refresh button
-    document.getElementById('refreshBtn').addEventListener('click', loadFeed);
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+        debugLogger.trackInteraction('REFRESH_FEED', {});
+        loadFeed();
+    });
 
     // Match modal close
     document.getElementById('closeMatchBtn').addEventListener('click', closeMatchModal);
@@ -85,8 +97,10 @@ function showMainApp() {
 // Load available users for selector
 async function loadUsers() {
     try {
+        debugLogger.log('API_CALL', { endpoint: '/users', method: 'GET' }, 'api-call');
         const response = await fetch(`${API_BASE}/users?limit=100`);
         const data = await response.json();
+        debugLogger.log('API_SUCCESS', { endpoint: '/users', count: data.users.length }, 'api-call');
 
         const select = document.getElementById('currentUserId');
         select.innerHTML = data.users.map(user =>
@@ -94,14 +108,17 @@ async function loadUsers() {
                 ${user.display_name} (${user.age}, ${user.location_city})
             </option>`
         ).join('');
+        debugLogger.trackUIState('user-selector', { loaded: true, count: data.users.length });
     } catch (error) {
         console.error('Failed to load users:', error);
+        debugLogger.log('API_ERROR', { endpoint: '/users', error: error.message }, 'api-call');
     }
 }
 
 // Load user statistics
 async function loadUserStats() {
     try {
+        debugLogger.log('API_CALL', { endpoint: `/users/${currentUserId}/stats`, method: 'GET' }, 'api-call');
         const response = await fetch(`${API_BASE}/users/${currentUserId}/stats`);
         const data = await response.json();
 
@@ -113,14 +130,25 @@ async function loadUserStats() {
         document.getElementById('likesWaiting').textContent = likesWaiting;
         document.getElementById('platformAvg').textContent =
             parseFloat(data.stats.platform_average_lpw).toFixed(1);
+        debugLogger.trackUIState('stats-dashboard', {
+            visibility: data.stats.visibility_score,
+            matchProb: matchProbability,
+            likesWaiting: likesWaiting
+        });
     } catch (error) {
         console.error('Failed to load stats:', error);
+        debugLogger.log('API_ERROR', { endpoint: '/users/stats', error: error.message }, 'api-call');
     }
 }
 
 // Load feed
 async function loadFeed() {
     try {
+        debugLogger.log('API_CALL', {
+            endpoint: `/feed/${currentUserId}`,
+            method: 'GET',
+            mode: currentMode
+        }, 'feed-loading');
         const response = await fetch(
             `${API_BASE}/feed/${currentUserId}?connectionMode=${currentMode}&limit=20`
         );
@@ -129,6 +157,11 @@ async function loadFeed() {
         currentFeed = data.feed;
         feedIndex = 0;
 
+        debugLogger.log('FEED_LOADED', {
+            count: currentFeed.length,
+            mode: currentMode
+        }, 'feed-loading');
+
         if (currentFeed.length === 0) {
             showNoMoreProfiles();
         } else {
@@ -136,11 +169,20 @@ async function loadFeed() {
         }
     } catch (error) {
         console.error('Failed to load feed:', error);
+        debugLogger.log('API_ERROR', { endpoint: '/feed', error: error.message }, 'feed-loading');
     }
 }
 
 // Show profile
 function showProfile(profile) {
+    debugLogger.trackUIState('profile-card', {
+        userId: profile.user_id,
+        name: profile.display_name,
+        age: profile.age,
+        compatibility: profile.compatibility?.score,
+        feedIndex: feedIndex
+    });
+
     document.getElementById('profileCard').style.display = 'block';
     document.getElementById('noMoreProfiles').style.display = 'none';
 
@@ -204,6 +246,13 @@ async function handleSwipe(direction) {
     const profile = currentFeed[feedIndex];
 
     try {
+        debugLogger.log('API_CALL', {
+            endpoint: '/swipe',
+            method: 'POST',
+            direction: direction,
+            swipedUser: profile.user_id
+        }, 'swipe-buttons');
+
         const response = await fetch(`${API_BASE}/swipe`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -217,6 +266,12 @@ async function handleSwipe(direction) {
 
         const data = await response.json();
 
+        debugLogger.log('SWIPE_RESULT', {
+            direction: direction,
+            isMatch: data.isMatch,
+            matchProbability: data.matchProbability
+        }, 'swipe-buttons');
+
         // Update match probability and likes waiting
         matchProbability = data.matchProbability || 0;
         likesWaiting = data.likesWaiting || 0;
@@ -226,6 +281,10 @@ async function handleSwipe(direction) {
 
         // Show match modal if it's a match
         if (data.isMatch) {
+            debugLogger.log('MATCH_DETECTED', {
+                matchedUser: profile.user_id,
+                matchedName: profile.display_name
+            }, 'match-modal');
             showMatchModal(profile);
         }
 
@@ -238,11 +297,18 @@ async function handleSwipe(direction) {
         }
     } catch (error) {
         console.error('Failed to record swipe:', error);
+        debugLogger.log('API_ERROR', { endpoint: '/swipe', error: error.message }, 'swipe-buttons');
     }
 }
 
 // Show match modal
 function showMatchModal(matchedProfile) {
+    debugLogger.trackUIState('match-modal', {
+        matchedUser: matchedProfile.user_id,
+        matchedName: matchedProfile.display_name,
+        visible: true
+    });
+
     const modal = document.getElementById('matchModal');
     const avatar1 = `https://api.dicebear.com/7.x/avataaars/svg?seed=user${currentUserId}`;
     const avatar2 = `https://api.dicebear.com/7.x/avataaars/svg?seed=${matchedProfile.avatar_seed}`;
@@ -257,14 +323,18 @@ function showMatchModal(matchedProfile) {
 
 // Close match modal
 function closeMatchModal() {
+    debugLogger.trackInteraction('CLOSE_MATCH_MODAL', {});
+    debugLogger.trackUIState('match-modal', { visible: false });
     document.getElementById('matchModal').style.display = 'none';
 }
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft') {
+        debugLogger.trackInteraction('KEYBOARD_SWIPE', { key: 'ArrowLeft', direction: 'left' });
         handleSwipe('left');
     } else if (e.key === 'ArrowRight') {
+        debugLogger.trackInteraction('KEYBOARD_SWIPE', { key: 'ArrowRight', direction: 'right' });
         handleSwipe('right');
     }
 });
