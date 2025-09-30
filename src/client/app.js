@@ -186,8 +186,8 @@ function showProfile(profile) {
     document.getElementById('profileCard').style.display = 'block';
     document.getElementById('noMoreProfiles').style.display = 'none';
 
-    // Avatar (using DiceBear API)
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.avatar_seed}`;
+    // Avatar (using local generator)
+    const avatarUrl = generateAvatarDataURL(profile.avatar_seed || profile.username);
     document.getElementById('profileAvatar').src = avatarUrl;
 
     // Basic info
@@ -310,8 +310,8 @@ function showMatchModal(matchedProfile) {
     });
 
     const modal = document.getElementById('matchModal');
-    const avatar1 = `https://api.dicebear.com/7.x/avataaars/svg?seed=user${currentUserId}`;
-    const avatar2 = `https://api.dicebear.com/7.x/avataaars/svg?seed=${matchedProfile.avatar_seed}`;
+    const avatar1 = generateAvatarDataURL(`user${currentUserId}`);
+    const avatar2 = generateAvatarDataURL(matchedProfile.avatar_seed || matchedProfile.username);
 
     document.getElementById('matchAvatar1').src = avatar1;
     document.getElementById('matchAvatar2').src = avatar2;
