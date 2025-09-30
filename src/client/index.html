@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Dating - Pre-Alpha Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <div class="crystal-icon">💎</div>
+                <h1>Crystal Dating</h1>
+            </div>
+            <div class="tagline">Transparent. Equitable. Meaningful.</div>
+        </div>
+    </header>
+
+    <!-- Main App -->
+    <main class="container">
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="dating">
+                <span class="icon">❤️</span>
+                Dating
+            </button>
+            <button class="mode-btn" data-mode="casual">
+                <span class="icon">🔥</span>
+                Casual
+            </button>
+            <button class="mode-btn" data-mode="professional">
+                <span class="icon">💼</span>
+                Professional
+            </button>
+            <button class="mode-btn" data-mode="platonic">
+                <span class="icon">🤝</span>
+                Platonic
+            </button>
+        </div>
+
+        <!-- User Selector (for demo) -->
+        <div class="user-selector">
+            <label for="currentUserId">Viewing as User:</label>
+            <select id="currentUserId">
+                <option value="1">User 1</option>
+            </select>
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-dashboard">
+            <div class="stat-card">
+                <div class="stat-label">Visibility Score</div>
+                <div class="stat-value" id="visibilityScore">--</div>
+                <div class="stat-info">Dating Socialism in action</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Match Probability</div>
+                <div class="stat-value" id="matchProbability">--</div>
+                <div class="stat-info">Increases with each swipe</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Likes Waiting</div>
+                <div class="stat-value" id="likesWaiting">--</div>
+                <div class="stat-info">People who liked you</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Platform Avg LPW</div>
+                <div class="stat-value" id="platformAvg">--</div>
+                <div class="stat-info">Likes per week average</div>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-container">
+            <div id="profileCard" class="profile-card">
+                <div class="profile-image">
+                    <img id="profileAvatar" src="" alt="Profile">
+                </div>
+                <div class="profile-info">
+                    <h2 id="profileName">Loading...</h2>
+                    <div class="profile-details">
+                        <span id="profileAge">--</span>,
+                        <span id="profileLocation">--</span>
+                    </div>
+                    <div class="profile-bio" id="profileBio">--</div>
+
+                    <!-- Compatibility Score -->
+                    <div class="compatibility-badge">
+                        <div class="compat-score" id="compatScore">--</div>
+                        <div class="compat-label">Compatibility</div>
+                    </div>
+
+                    <!-- Preference Indicators -->
+                    <div class="preference-indicators">
+                        <div class="pref-badge" id="prefBadge">
+                            <span class="pref-icon">🎯</span>
+                            <span id="prefTier">--</span>
+                        </div>
+                        <div class="fringe-badge" id="fringeBadge" style="display: none;">
+                            <span class="fringe-icon">✨</span>
+                            Fringe Match
+                        </div>
+                    </div>
+
+                    <!-- Profile Tags -->
+                    <div class="profile-tags" id="profileTags"></div>
+                </div>
+
+                <!-- Swipe Buttons -->
+                <div class="swipe-buttons">
+                    <button class="swipe-btn pass" id="passBtn">
+                        <span class="btn-icon">✖</span>
+                        <span class="btn-label">Pass</span>
+                    </button>
+                    <button class="swipe-btn like" id="likeBtn">
+                        <span class="btn-icon">❤</span>
+                        <span class="btn-label">Like</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- No More Profiles -->
+            <div id="noMoreProfiles" class="no-more-profiles" style="display: none;">
+                <div class="empty-icon">💎</div>
+                <h3>No more profiles</h3>
+                <p>You've seen everyone in your feed!</p>
+                <button id="refreshBtn" class="refresh-btn">Refresh Feed</button>
+            </div>
+
+            <!-- Match Modal -->
+            <div id="matchModal" class="modal" style="display: none;">
+                <div class="modal-content match-modal">
+                    <div class="match-icon">🎉</div>
+                    <h2>It's a Match!</h2>
+                    <div class="match-users">
+                        <div class="match-avatar">
+                            <img id="matchAvatar1" src="" alt="You">
+                        </div>
+                        <div class="match-heart">💕</div>
+                        <div class="match-avatar">
+                            <img id="matchAvatar2" src="" alt="Match">
+                        </div>
+                    </div>
+                    <p id="matchText">You and someone matched!</p>
+                    <button id="closeMatchBtn" class="primary-btn">Continue Swiping</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithm Info -->
+        <div class="algorithm-info">
+            <h3>🔮 How Crystal Works</h3>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>Dating Socialism</h4>
+                    <p>Popular users become <em>less</em> visible to equalize match opportunities for everyone.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Fringe Dating</h4>
+                    <p>Users outside mainstream preferences get boosted if they match <em>your</em> specific criteria.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Bullseye Preferences</h4>
+                    <p>Multi-tier preference system: Must-Have, Preferred, Acceptable, Outside.</p>
+                </div>
+                <div class="info-card">
+                    <h4>Live Transparency</h4>
+                    <p>See your visibility score, match probability, and how the algorithm works in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Crystal Dating - Pre-Alpha Demo v0.1.0</p>
+            <p>Built on transparency, equity, and meaningful connection</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

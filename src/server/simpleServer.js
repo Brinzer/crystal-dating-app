@@ -124,6 +124,63 @@ app.get('/api/users/:userId', (req, res) => {
 });
 
 /**
+ * POST /api/users/create
+ * Create a new user account
+ */
+app.post('/api/users/create', (req, res) => {
+  try {
+    const newUser = req.body;
+
+    // Generate new user ID
+    const maxId = Math.max(...users.map(u => u.user_id));
+    const userId = maxId + 1;
+
+    // Create complete user object with defaults
+    const user = {
+      user_id: userId,
+      username: newUser.username || `user${userId}`,
+      display_name: newUser.display_name,
+      age: newUser.age,
+      gender: newUser.gender,
+      sexual_orientation: newUser.sexual_orientation || 'heterosexual',
+      location_city: newUser.location_city,
+      location_state: newUser.location_state || 'NY',
+      bio: newUser.bio || '',
+      avatar_seed: newUser.username || `user${userId}`,
+
+      // Visibility metrics
+      visibility_score: 1.0,
+      likes_received_week: 0,
+      likes_given_week: 0,
+      swipes_week: 0,
+      matches_total: 0,
+
+      // Connection modes
+      seeking_dating: newUser.seeking_dating !== undefined ? newUser.seeking_dating : 1,
+      seeking_casual: newUser.seeking_casual || 0,
+      seeking_professional: newUser.seeking_professional || 0,
+      seeking_platonic: newUser.seeking_platonic || 0,
+
+      // Details
+      details: newUser.details || {},
+      preferences: newUser.preferences || {}
+    };
+
+    // Add to users array
+    users.push(user);
+
+    res.json({
+      success: true,
+      user_id: userId,
+      message: 'User created successfully'
+    });
+  } catch (error) {
+    console.error('User creation error:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+/**
  * GET /api/users/:userId/stats
  */
 app.get('/api/users/:userId/stats', (req, res) => {
