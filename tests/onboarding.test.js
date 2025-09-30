@@ -36,9 +36,9 @@ test.describe('Chris Openheart Onboarding Tests', () => {
         await expect(page.locator('#voiceBtn')).toBeVisible();
         await expect(page.locator('#sendBtn')).toBeVisible();
 
-        // Check progress bar
+        // Check progress bar (fill starts at 0% width, so just check it exists)
         await expect(page.locator('#progressPercent')).toBeVisible();
-        await expect(page.locator('#progressFill')).toBeVisible();
+        await expect(page.locator('#progressFill')).toHaveCount(1);
 
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, '01-initial-load.png'), fullPage: true });
     });

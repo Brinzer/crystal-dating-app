@@ -41,6 +41,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from client directory
+app.use(express.static(path.join(__dirname, '../client')));
+
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
