@@ -160,7 +160,9 @@ function evaluatePreferenceMatch(user, preferences) {
   }
 
   // GENDER & ORIENTATION
-  const seekingGenders = JSON.parse(preferences.seeking_genders || '[]');
+  const seekingGenders = Array.isArray(preferences.seeking_genders)
+    ? preferences.seeking_genders
+    : (preferences.seeking_genders ? JSON.parse(preferences.seeking_genders) : []);
   if (seekingGenders.includes(user.gender)) {
     score += CONFIG.PREFERENCE_WEIGHTS.MUST_HAVE;
   } else {
@@ -397,8 +399,12 @@ function calculateOverallCompatibility(user1, user2) {
   const personalityScore = calculatePersonalityCompatibility(user1.details, user2.details);
 
   // Interests
-  const interests1 = JSON.parse(user1.details.interests || '[]');
-  const interests2 = JSON.parse(user2.details.interests || '[]');
+  const interests1 = Array.isArray(user1.details.interests)
+    ? user1.details.interests
+    : (user1.details.interests ? JSON.parse(user1.details.interests) : []);
+  const interests2 = Array.isArray(user2.details.interests)
+    ? user2.details.interests
+    : (user2.details.interests ? JSON.parse(user2.details.interests) : []);
   const interestScore = calculateInterestOverlap(interests1, interests2);
 
   // Communication style
