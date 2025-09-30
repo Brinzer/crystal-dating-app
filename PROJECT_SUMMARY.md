@@ -139,18 +139,20 @@ crystal-dating-app/
 │   └── client/
 │       ├── index.html                 (180 lines)
 │       ├── styles.css                 (600+ lines)
-│       └── app.js                     (200+ lines)
+│       ├── app.js                     (340+ lines) - instrumented with debug logging
+│       └── debugLogger.js             (290 lines) - NEW
 ├── docs/
 │   └── FEATURES.md
 ├── logs/
 │   └── crystal_progress.log
 ├── README.md
 ├── DEMO_GUIDE.md
+├── DEBUG_LOGGER_GUIDE.md (NEW)
 ├── PROJECT_SUMMARY.md (this file)
 └── package.json
 ```
 
-**Total Code**: ~2,500+ lines
+**Total Code**: ~3,200+ lines
 **Languages**: JavaScript, HTML, CSS, SQL
 **Dependencies**: Express, CORS (minimal)
 
@@ -245,6 +247,15 @@ crystal-dating-app/
 - ✅ Live statistics dashboard
 - ✅ User creation support
 - ✅ Match detection & modal
+- ✅ **Built-in Debug Logger** (NEW)
+  - Automatic session tracking with timestamps
+  - UI state tracking with code references
+  - Interaction logging for all user actions
+  - API call monitoring with success/error tracking
+  - Error capture with full context
+  - Keyboard shortcuts (Ctrl+Shift+D/L/C/S)
+  - JSON export functionality
+  - Code mapping (UI components → file:line)
 
 ---
 
