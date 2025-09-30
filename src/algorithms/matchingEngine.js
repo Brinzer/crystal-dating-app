@@ -398,13 +398,21 @@ function calculateOverallCompatibility(user1, user2) {
   // Personality
   const personalityScore = calculatePersonalityCompatibility(user1.details, user2.details);
 
-  // Interests
+  // Interests - handle comma-separated strings or arrays
   const interests1 = Array.isArray(user1.details.interests)
     ? user1.details.interests
-    : (user1.details.interests ? JSON.parse(user1.details.interests) : []);
+    : (user1.details.interests
+        ? (typeof user1.details.interests === 'string'
+            ? user1.details.interests.split(',').map(i => i.trim())
+            : [])
+        : []);
   const interests2 = Array.isArray(user2.details.interests)
     ? user2.details.interests
-    : (user2.details.interests ? JSON.parse(user2.details.interests) : []);
+    : (user2.details.interests
+        ? (typeof user2.details.interests === 'string'
+            ? user2.details.interests.split(',').map(i => i.trim())
+            : [])
+        : []);
   const interestScore = calculateInterestOverlap(interests1, interests2);
 
   // Communication style
