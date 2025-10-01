@@ -412,20 +412,26 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
-// START SERVER
+// START SERVER / EXPORT FOR VERCEL
 // ============================================
 
-app.listen(PORT, () => {
-  console.log(`\n🔮 Crystal Dating App - Backend Server`);
-  console.log(`📍 Running on: http://localhost:${PORT}`);
-  console.log(`📊 Database: ${DB_SIZE} users`);
-  console.log(`✨ Features: Dating Socialism, Fringe Dating, Bullseye Matching`);
-  console.log(`\n📡 Try: curl http://localhost:${PORT}/api/status\n`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`\n🔮 Crystal Dating App - Backend Server`);
+    console.log(`📍 Running on: http://localhost:${PORT}`);
+    console.log(`📊 Database: ${DB_SIZE} users`);
+    console.log(`✨ Features: Dating Socialism, Fringe Dating, Bullseye Matching`);
+    console.log(`\n📡 Try: curl http://localhost:${PORT}/api/status\n`);
+  });
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n\n👋 Shutting down Crystal Dating backend...');
-  // saveDatabase(); // Uncomment to persist state
-  process.exit(0);
-});
+  // Graceful shutdown
+  process.on('SIGINT', () => {
+    console.log('\n\n👋 Shutting down Crystal Dating backend...');
+    // saveDatabase(); // Uncomment to persist state
+    process.exit(0);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
