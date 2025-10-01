@@ -428,22 +428,45 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     console.log(`🎤 Transcribing audio: ${req.file.size} bytes, ${req.file.mimetype}`);
 
     // Use Hugging Face Inference API directly with fetch
-    // Using distil-whisper which is optimized for speed
-    const API_URL = 'https://api-inference.huggingface.co/models/distil-whisper/distil-large-v3';
+    // Try multiple models in order of preference
+    const modelsToTry = [
+      'openai/whisper-tiny',
+      'openai/whisper-base',
+      'openai/whisper-small'
+    ];
 
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.HF_TOKEN}`,
-        'Content-Type': 'audio/webm'
-      },
-      body: req.file.buffer
-    });
+    let response = null;
+    let lastError = null;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`API error: ${response.status} - ${errorText}`);
-      throw new Error(`HF API returned ${response.status}: ${errorText}`);
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Trying model: ${model}`);
+        const API_URL = `https://api-inference.huggingface.co/models/${model}`;
+
+        response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.HF_TOKEN}`
+          },
+          body: req.file.buffer
+        });
+
+        if (response.ok) {
+          console.log(`✅ Success with model: ${model}`);
+          break;
+        } else {
+          const errorText = await response.text();
+          console.log(`❌ Model ${model} failed: ${response.status} - ${errorText.substring(0, 200)}`);
+          lastError = errorText;
+        }
+      } catch (error) {
+        console.log(`❌ Model ${model} error: ${error.message}`);
+        lastError = error.message;
+      }
+    }
+
+    if (!response || !response.ok) {
+      throw new Error(`All models failed. Last error: ${lastError}`);
     }
 
     const result = await response.json();
