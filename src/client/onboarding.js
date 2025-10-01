@@ -3,7 +3,9 @@
  * Conversational user profile creation with voice input
  */
 
-const API_BASE = 'http://localhost:3500/api';
+const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3500/api'
+    : '/api';
 
 // Conversation state
 let conversationState = {

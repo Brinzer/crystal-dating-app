@@ -3,7 +3,9 @@
  * Handles authentication and redirects to onboarding or main app
  */
 
-const API_BASE = 'http://localhost:3500/api';
+const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3500/api'
+    : '/api';
 
 // Get elements
 const loginForm = document.getElementById('loginForm');
