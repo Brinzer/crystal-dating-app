@@ -15,12 +15,6 @@
       "dest": "src/server/simpleServer.js"
     }
   ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/login.html"
-    }
-  ],
   "regions": ["iad1"],
   "env": {
     "NODE_ENV": "production"
