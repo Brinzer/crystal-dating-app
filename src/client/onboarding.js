@@ -401,15 +401,14 @@ function addChrisMessage(text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message chris';
     messageDiv.innerHTML = `
-        <div class="message-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">👤</div>
+        <img src="assets/chris-openheart.png" class="message-avatar" style="width: 40px; height: 40px; object-fit: contain;" alt="Chris">
         <div class="message-content">${text}</div>
     `;
     messagesDiv.appendChild(messageDiv);
 
-    // Scroll to bottom after render
+    // Scroll to bottom smoothly
     setTimeout(() => {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 100);
 }
 
@@ -423,10 +422,9 @@ function addUserMessage(text) {
     `;
     messagesDiv.appendChild(messageDiv);
 
-    // Scroll to bottom after render
+    // Scroll to bottom smoothly
     setTimeout(() => {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 100);
 }
 

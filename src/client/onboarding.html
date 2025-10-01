@@ -17,7 +17,8 @@
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            min-height: 500px;
+            height: 600px;
+            max-height: 80vh;
             display: flex;
             flex-direction: column;
         }
@@ -47,9 +48,28 @@
         .messages {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             margin-bottom: 20px;
             padding: 10px;
-            max-height: 400px;
+            min-height: 0;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         .message {
