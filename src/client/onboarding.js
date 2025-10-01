@@ -387,7 +387,12 @@ function addChrisMessage(text) {
         <div class="message-content">${text}</div>
     `;
     messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    // Scroll to bottom after render
+    setTimeout(() => {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
 }
 
 function addUserMessage(text) {
@@ -399,7 +404,12 @@ function addUserMessage(text) {
         <div class="message-content">${text}</div>
     `;
     messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    // Scroll to bottom after render
+    setTimeout(() => {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
 }
 
 function updateProgress() {
