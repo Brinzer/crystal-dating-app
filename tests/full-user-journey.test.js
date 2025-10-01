@@ -30,6 +30,9 @@ Object.values(folders).forEach(folder => {
 
 test.describe('Complete User Journey - End to End', () => {
     test('Full Journey: New User Signup → Onboarding → Swiping → Matching', async ({ page }) => {
+        // Increase timeout for long test
+        test.setTimeout(120000); // 2 minutes
+
         console.log('\n🚀 Starting Complete User Journey Test\n');
 
         // ====================================
@@ -83,8 +86,8 @@ test.describe('Complete User Journey - End to End', () => {
         // ====================================
         console.log('📍 Phase 2: Onboarding with Chris');
 
-        // Click signup (redirects to onboarding)
-        await page.click('button[type="submit"]');
+        // Click signup button (need to be specific since both forms exist)
+        await page.click('#signupForm button[type="submit"]');
         await page.waitForURL('**/onboarding.html', { timeout: 5000 });
 
         // Wait for Chris to greet
@@ -116,7 +119,7 @@ test.describe('Complete User Journey - End to End', () => {
         ];
 
         for (let i = 0; i < answers.length; i++) {
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(800); // Reduced from 1500ms
 
             // Screenshot every 3 questions
             if (i % 3 === 0) {
