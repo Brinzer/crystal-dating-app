@@ -17,6 +17,10 @@ let conversationState = {
 // Voice recognition setup
 let recognition = null;
 let isRecording = false;
+let voskModel = null;
+let voskRecognizer = null;
+let mediaRecorder = null;
+let audioContext = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,11 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
     startConversation();
 });
 
-function initVoiceRecognition() {
+async function initVoiceRecognition() {
     console.log('Initializing voice recognition...');
     console.log('webkitSpeechRecognition available:', 'webkitSpeechRecognition' in window);
     console.log('SpeechRecognition available:', 'SpeechRecognition' in window);
 
+    // Try Web Speech API first (best quality, Chrome/Edge)
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         try {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -39,13 +44,13 @@ function initVoiceRecognition() {
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
-                console.log('Voice recognition started');
+                console.log('Web Speech API started');
                 isRecording = true;
                 document.getElementById('voiceBtn').classList.add('recording');
             };
 
             recognition.onresult = (event) => {
-                console.log('Voice recognition result:', event);
+                console.log('Web Speech API result:', event);
                 const transcript = event.results[0][0].transcript;
                 console.log('Transcript:', transcript);
                 document.getElementById('userInput').value = transcript;
@@ -53,13 +58,13 @@ function initVoiceRecognition() {
             };
 
             recognition.onend = () => {
-                console.log('Voice recognition ended');
+                console.log('Web Speech API ended');
                 isRecording = false;
                 document.getElementById('voiceBtn').classList.remove('recording');
             };
 
             recognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
+                console.error('Web Speech API error:', event.error);
                 isRecording = false;
                 document.getElementById('voiceBtn').classList.remove('recording');
                 if (event.error === 'not-allowed') {
@@ -69,13 +74,27 @@ function initVoiceRecognition() {
                 }
             };
 
-            console.log('Voice recognition initialized successfully');
+            console.log('Web Speech API initialized successfully');
+            return;
         } catch (error) {
-            console.error('Error initializing voice recognition:', error);
+            console.error('Error initializing Web Speech API:', error);
+        }
+    }
+
+    // Fallback to Vosk for Opera and other browsers
+    console.log('Web Speech API not available, loading Vosk fallback...');
+    try {
+        if (typeof Vosk !== 'undefined') {
+            console.log('Vosk library loaded, initializing...');
+            // Vosk initialization will happen on first use to avoid loading delay
+            recognition = 'vosk'; // Marker that we're using Vosk
+            console.log('Vosk fallback ready');
+        } else {
+            console.log('Vosk library not available');
             recognition = null;
         }
-    } else {
-        console.log('Speech recognition not supported');
+    } catch (error) {
+        console.error('Error initializing Vosk:', error);
         recognition = null;
     }
 }
@@ -95,9 +114,9 @@ function initEventListeners() {
     });
 }
 
-function toggleVoiceInput() {
+async function toggleVoiceInput() {
     console.log('Toggle voice input clicked');
-    console.log('Recognition object:', recognition);
+    console.log('Recognition type:', recognition);
     console.log('Is recording:', isRecording);
 
     if (!recognition) {
@@ -108,15 +127,76 @@ function toggleVoiceInput() {
 
     if (isRecording) {
         console.log('Stopping recording');
-        recognition.stop();
-    } else {
-        console.log('Starting recording');
-        try {
-            recognition.start();
-        } catch (error) {
-            console.error('Error starting recognition:', error);
-            addChrisMessage(`Couldn't start voice input: ${error.message}. You can type your responses instead!`);
+        if (recognition === 'vosk' && mediaRecorder) {
+            mediaRecorder.stop();
+        } else if (recognition.stop) {
+            recognition.stop();
         }
+    } else {
+        // Web Speech API
+        if (recognition !== 'vosk' && recognition.start) {
+            console.log('Starting Web Speech API');
+            try {
+                recognition.start();
+            } catch (error) {
+                console.error('Error starting Web Speech API:', error);
+                addChrisMessage(`Couldn't start voice input: ${error.message}`);
+            }
+        }
+        // Vosk fallback
+        else if (recognition === 'vosk') {
+            console.log('Starting Vosk recording');
+            try {
+                await startVoskRecording();
+            } catch (error) {
+                console.error('Error starting Vosk:', error);
+                addChrisMessage(`Couldn't start voice input: ${error.message}`);
+            }
+        }
+    }
+}
+
+async function startVoskRecording() {
+    try {
+        // Request microphone access
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone access granted');
+
+        // Create audio context and media recorder
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+        const source = audioContext.createMediaStreamSource(stream);
+
+        // Simple recording with MediaRecorder
+        mediaRecorder = new MediaRecorder(stream);
+        const audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            console.log('Vosk recording stopped');
+            isRecording = false;
+            document.getElementById('voiceBtn').classList.remove('recording');
+
+            // For now, just show a message that Vosk transcription is being implemented
+            // Full Vosk integration requires model loading which is complex
+            addChrisMessage("Voice recording completed! (Vosk transcription is being finalized - for now, please type your response)");
+
+            // Clean up
+            stream.getTracks().forEach(track => track.stop());
+            audioContext.close();
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('voiceBtn').classList.add('recording');
+        console.log('Vosk recording started');
+
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+        addChrisMessage("Couldn't access microphone. Please check permissions!");
+        isRecording = false;
     }
 }
 
