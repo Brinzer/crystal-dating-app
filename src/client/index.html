@@ -75,16 +75,29 @@
         <!-- Profile Card -->
         <div class="profile-container">
             <div id="profileCard" class="profile-card">
+                <!-- Tinder-style image with overlay text -->
                 <div class="profile-image">
                     <img id="profileAvatar" src="" alt="Profile">
-                </div>
-                <div class="profile-info">
-                    <h2 id="profileName">Loading...</h2>
-                    <div class="profile-details">
-                        <span id="profileAge">--</span>,
-                        <span id="profileLocation">--</span>
+                    <div class="profile-image-overlay">
+                        <h2>
+                            <span id="profileName">Loading...</span>
+                            <span class="age" id="profileAge">--</span>
+                        </h2>
+                        <div class="location">
+                            <span>📍</span>
+                            <span id="profileLocation">--</span>
+                        </div>
                     </div>
+                </div>
+
+                <div class="profile-info">
+                    <!-- Bio -->
                     <div class="profile-bio" id="profileBio">--</div>
+
+                    <!-- Bumble-style info grid -->
+                    <div class="profile-info-grid" id="profileInfoGrid">
+                        <!-- Will be populated dynamically with occupation, education, etc. -->
+                    </div>
 
                     <!-- Compatibility Score -->
                     <div class="compatibility-badge">

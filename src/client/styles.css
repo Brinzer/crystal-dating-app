@@ -202,21 +202,70 @@ main {
     border-radius: var(--border-radius);
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    position: relative;
 }
 
 .profile-image {
-    height: 400px;
+    height: 500px; /* Taller like Tinder */
     background: linear-gradient(135deg, var(--crystal-primary), var(--crystal-secondary));
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-end; /* Align content to bottom like Tinder */
+    justify-content: flex-start;
     position: relative;
+    overflow: hidden;
+}
+
+/* Gradient overlay for better text readability (Tinder style) */
+.profile-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+    pointer-events: none;
 }
 
 .profile-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Name and location overlay on image (Tinder style) */
+.profile-image-overlay {
+    position: relative;
+    z-index: 10;
+    padding: 1.5rem;
+    color: white;
+    width: 100%;
+}
+
+.profile-image-overlay h2 {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.profile-image-overlay h2 .age {
+    font-weight: 400;
+    font-size: 1.5rem;
+}
+
+.profile-image-overlay .location {
+    font-size: 1rem;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .profile-info {
@@ -231,12 +280,63 @@ main {
 .profile-details {
     color: var(--text-secondary);
     margin-bottom: 1rem;
+    font-size: 1.1rem;
 }
 
 .profile-bio {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 1rem;
+    color: var(--text-primary);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    padding: 1rem;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 12px;
+    border-left: 3px solid var(--crystal-primary);
+}
+
+/* Info icons (Bumble style) */
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: 10px;
+    transition: var(--transition);
+}
+
+.info-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.info-icon {
+    font-size: 1.5rem;
+    min-width: 32px;
+    text-align: center;
+}
+
+.info-text {
+    flex: 1;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 /* Compatibility Badge */

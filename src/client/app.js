@@ -190,12 +190,86 @@ function showProfile(profile) {
     const avatarUrl = generateAvatarDataURL(profile.avatar_seed || profile.username);
     document.getElementById('profileAvatar').src = avatarUrl;
 
-    // Basic info
+    // Basic info (now in image overlay)
     document.getElementById('profileName').textContent = profile.display_name;
     document.getElementById('profileAge').textContent = profile.age;
     document.getElementById('profileLocation').textContent =
         `${profile.location_city}, ${profile.location_state}`;
     document.getElementById('profileBio').textContent = profile.bio;
+
+    // Populate Bumble-style info grid
+    const infoGrid = document.getElementById('profileInfoGrid');
+    infoGrid.innerHTML = '';
+
+    // Add info items with icons
+    const infoItems = [];
+
+    if (profile.details.occupation) {
+        infoItems.push({
+            icon: '💼',
+            label: 'Occupation',
+            value: profile.details.occupation
+        });
+    }
+
+    if (profile.details.education_level) {
+        infoItems.push({
+            icon: '🎓',
+            label: 'Education',
+            value: profile.details.education_level
+        });
+    }
+
+    if (profile.details.height_cm) {
+        const heightFt = Math.floor(profile.details.height_cm / 30.48);
+        const heightIn = Math.round((profile.details.height_cm / 2.54) % 12);
+        infoItems.push({
+            icon: '📏',
+            label: 'Height',
+            value: `${heightFt}'${heightIn}" (${profile.details.height_cm}cm)`
+        });
+    }
+
+    if (profile.details.drinking_frequency) {
+        infoItems.push({
+            icon: '🍷',
+            label: 'Drinking',
+            value: profile.details.drinking_frequency
+        });
+    }
+
+    if (profile.details.smoking_status) {
+        const smokingIcon = profile.details.smoking_status === 'never' ? '🚭' : '🚬';
+        infoItems.push({
+            icon: smokingIcon,
+            label: 'Smoking',
+            value: profile.details.smoking_status
+        });
+    }
+
+    if (profile.details.has_children_number !== undefined) {
+        infoItems.push({
+            icon: '👶',
+            label: 'Children',
+            value: profile.details.has_children_number > 0
+                ? `Has ${profile.details.has_children_number}`
+                : 'No children'
+        });
+    }
+
+    // Render info items
+    infoItems.forEach(item => {
+        const infoItem = document.createElement('div');
+        infoItem.className = 'info-item';
+        infoItem.innerHTML = `
+            <div class="info-icon">${item.icon}</div>
+            <div class="info-text">
+                <div class="info-label">${item.label}</div>
+                <div class="info-value">${item.value}</div>
+            </div>
+        `;
+        infoGrid.appendChild(infoItem);
+    });
 
     // Compatibility
     if (profile.compatibility) {
