@@ -7,18 +7,25 @@
 }
 
 :root {
-    /* Crystal Color Palette - Based on branding */
-    --crystal-primary: #6366f1; /* Indigo - main brand color */
-    --crystal-secondary: #8b5cf6; /* Purple - secondary */
-    --crystal-accent: #ec4899; /* Pink - accent for love/dating */
-    --crystal-success: #10b981; /* Green - matches/success */
-    --crystal-warning: #f59e0b; /* Amber - caution */
-    --crystal-danger: #ef4444; /* Red - reject */
+    /* Crystal Color Palette - Based on official branding */
+    --crystal-blue: #00BCD4;
+    --crystal-light: #4DD0E1;
+    --crystal-dark: #0288D1;
+    --heart-red: #FF4081;
+    --heart-dark: #C2185B;
 
-    --bg-primary: #0f172a; /* Dark blue-gray */
-    --bg-secondary: #1e293b;
+    /* Legacy color names for compatibility */
+    --crystal-primary: #00BCD4;
+    --crystal-secondary: #4DD0E1;
+    --crystal-accent: #FF4081;
+    --crystal-success: #10b981;
+    --crystal-warning: #f59e0b;
+    --crystal-danger: #ef4444;
+
+    --bg-primary: #0A0E27; /* Darker blue matching brand */
+    --bg-secondary: #1a1a3e;
     --bg-card: #334155;
-    --text-primary: #f1f5f9;
+    --text-primary: #E8F4FD; /* Lighter text from brand */
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
 
@@ -29,10 +36,33 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Crystal Shimmer Overlay - Brand Enhancement */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+    background:
+        linear-gradient(135deg, transparent 30%, rgba(77, 208, 225, 0.05) 50%, transparent 70%),
+        linear-gradient(45deg, transparent 30%, rgba(0, 188, 212, 0.03) 50%, transparent 70%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.5; }
 }
 
 .container {
@@ -60,21 +90,38 @@ header {
 
 .crystal-icon {
     font-size: 2rem;
-    animation: sparkle 2s ease-in-out infinite;
+    animation: crystal-float 4s ease-in-out infinite;
+    filter: drop-shadow(0 5px 15px rgba(0, 188, 212, 0.4));
+    transition: transform 0.3s ease;
 }
 
-@keyframes sparkle {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(15deg); }
+.crystal-icon:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+@keyframes crystal-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
 }
 
 header h1 {
     font-size: 1.75rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--crystal-primary), var(--crystal-accent));
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--crystal-blue), var(--heart-red));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    letter-spacing: -0.5px;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        filter: drop-shadow(0 0 3px rgba(0, 188, 212, 0.3));
+    }
+    to {
+        filter: drop-shadow(0 0 8px rgba(255, 64, 129, 0.4));
+    }
 }
 
 .tagline {
@@ -203,6 +250,14 @@ main {
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     position: relative;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 188, 212, 0.2);
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 70px rgba(0, 188, 212, 0.3);
+    border-color: var(--crystal-light);
 }
 
 .profile-image {
@@ -420,13 +475,15 @@ main {
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     font-size: 1rem;
     font-weight: 600;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
 }
 
 .swipe-btn .btn-icon {
@@ -440,16 +497,18 @@ main {
 
 .swipe-btn.pass:hover {
     background: #dc2626;
-    transform: scale(1.05);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
 }
 
 .swipe-btn.like {
-    background: var(--crystal-accent);
+    background: linear-gradient(135deg, var(--heart-red), var(--heart-dark));
     color: white;
 }
 
 .swipe-btn.like:hover {
-    background: #db2777;
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 64, 129, 0.5);
     transform: scale(1.05);
 }
 
