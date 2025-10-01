@@ -162,10 +162,6 @@ async function startVoskRecording() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('Microphone access granted');
 
-        // Create audio context for Vosk (requires 16kHz sample rate)
-        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-        const source = audioContext.createMediaStreamSource(stream);
-
         // Use MediaRecorder API for simple recording
         // Note: In browsers without Web Speech API, user can speak and we'll record
         // For now, we'll show a message and let them type instead
@@ -228,10 +224,6 @@ function stopVoskRecording() {
     if (window.voskStream) {
         window.voskStream.getTracks().forEach(track => track.stop());
         window.voskStream = null;
-    }
-    if (audioContext) {
-        audioContext.close();
-        audioContext = null;
     }
 }
 
