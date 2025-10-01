@@ -92,13 +92,7 @@ function showError(elementId, message) {
     }, 5000);
 }
 
-// Check if already logged in
-window.addEventListener('DOMContentLoaded', () => {
-    const userId = localStorage.getItem('crystalUserId');
-    if (userId) {
-        // Already logged in, redirect to main app
-        window.location.href = 'index.html';
-    }
-});
+// Removed auto-redirect check - always allow access to login page
+// Users will be manually redirected after login/signup only
 
 console.log('💎 Crystal Dating - Login page loaded');

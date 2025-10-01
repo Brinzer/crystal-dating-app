@@ -155,20 +155,26 @@ main {
     border-radius: var(--border-radius);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
     font-size: 0.9rem;
     font-weight: 600;
+    position: relative;
+    overflow: hidden;
 }
 
 .mode-btn:hover {
     background: var(--bg-secondary);
-    border-color: var(--crystal-primary);
+    border-color: var(--crystal-light);
+    color: var(--crystal-light);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 188, 212, 0.2);
 }
 
 .mode-btn.active {
-    background: var(--crystal-primary);
+    background: linear-gradient(135deg, var(--crystal-blue), var(--crystal-dark));
     color: white;
-    border-color: var(--crystal-primary);
+    border-color: var(--crystal-blue);
+    box-shadow: 0 5px 20px rgba(0, 188, 212, 0.4);
 }
 
 .mode-btn .icon {
