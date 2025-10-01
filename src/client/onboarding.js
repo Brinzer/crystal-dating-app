@@ -265,23 +265,47 @@ function processUserResponse(message) {
             Object.assign(conversationState.userData, parsed);
         }
 
-        // Acknowledge and move to next question
-        const acknowledgments = [
-            "Got it!",
-            "Perfect!",
-            "Great!",
-            "Awesome!",
-            "Nice!",
-            "Cool!"
-        ];
-        const ack = acknowledgments[Math.floor(Math.random() * acknowledgments.length)];
-        addChrisMessage(ack);
+        // Give personalized acknowledgment based on what was shared
+        let response = getPersonalizedResponse(conversationState.step, parsed, message);
+        addChrisMessage(response);
 
         conversationState.step++;
-        askNextQuestion();
+        setTimeout(() => askNextQuestion(), 1500);
     } else {
         addChrisMessage("Hmm, I didn't quite catch that. Could you try rephrasing?");
     }
+}
+
+// Personalized response generator
+function getPersonalizedResponse(step, parsed, originalMessage) {
+    const responses = {
+        0: () => `Nice to meet you, ${parsed}! That's a great name.`,
+        1: () => {
+            const age = parsed;
+            if (age >= 18 && age <= 25) return `${age}! You're in the prime dating years - lots of people your age on here!`;
+            if (age >= 26 && age <= 35) return `${age}! Perfect - you're in great company. Tons of folks in their late 20s and early 30s here.`;
+            if (age >= 36 && age <= 45) return `${age}! Nice - there's a solid community of people in their late 30s and 40s on Crystal.`;
+            return `${age}, got it! There's someone for everyone here.`;
+        },
+        2: () => `${parsed === 'non-binary' || parsed === 'other' ? 'Thanks for sharing that' : parsed}, perfect! I appreciate you being open with me.`,
+        3: () => `${parsed.location_city}, ${parsed.location_state} - nice spot! I'll make sure to show you folks nearby.`,
+        4: () => `${parsed.age_min_preferred} to ${parsed.age_max_preferred}, cool! That gives us a good range to work with.`,
+        5: () => `Awesome! I'll keep that in mind when showing you matches.`,
+        6: () => {
+            const heightFt = Math.floor(parsed / 30.48);
+            const heightIn = Math.round((parsed / 30.48 - heightFt) * 12);
+            return `About ${heightFt}'${heightIn}" - got it! Height's just one piece of the puzzle anyway.`;
+        },
+        7: () => `${originalMessage} - I love it! Those interests say a lot about you.`,
+        8: () => `${parsed} - thanks for being honest about that!`,
+        9: () => `${parsed} - good to know your drinking habits!`,
+        10: () => `${parsed} - nice! Education comes in many forms.`,
+        11: () => `${parsed} - that's cool work!`,
+        12: () => `I hear you. Let's find what you're looking for!`,
+        13: () => `"${originalMessage}" - I like it! That bio really captures your vibe.`
+    };
+
+    return responses[step] ? responses[step]() : "Great!";
 }
 
 // Parsing functions
