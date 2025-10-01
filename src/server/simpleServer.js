@@ -425,20 +425,29 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'No audio file provided' });
     }
 
-    // Initialize Hugging Face Inference API
-    // Note: HF_TOKEN should be in environment variables
-    // For free tier, we use the public inference API
-    const hf = new HfInference(process.env.HF_TOKEN);
-
     console.log(`🎤 Transcribing audio: ${req.file.size} bytes, ${req.file.mimetype}`);
 
-    // Use Whisper model for transcription
-    const result = await hf.automaticSpeechRecognition({
-      data: req.file.buffer,
-      model: 'openai/whisper-base' // Using base model for faster free-tier inference
+    // Use Hugging Face Inference API directly with fetch
+    // Using distil-whisper which is optimized for speed
+    const API_URL = 'https://api-inference.huggingface.co/models/distil-whisper/distil-large-v3';
+
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.HF_TOKEN}`,
+        'Content-Type': 'audio/webm'
+      },
+      body: req.file.buffer
     });
 
-    console.log(`✅ Transcription: "${result.text}"`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error: ${response.status} - ${errorText}`);
+      throw new Error(`HF API returned ${response.status}: ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log(`✅ Transcription result:`, result);
 
     res.json({
       success: true,
