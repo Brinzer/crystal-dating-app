@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Microphone Test</title>
+    <title>Microphone Test - Server Transcription</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 50px auto;
             padding: 20px;
             background: #f5f5f5;
@@ -20,6 +20,24 @@
         }
         h1 {
             color: #333;
+        }
+        .mode-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+        .mode-selector button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .mode-selector button.active {
+            background: #1976d2;
+            color: white;
         }
         .mic-button {
             width: 100px;
@@ -57,7 +75,7 @@
             background: #f5f5f5;
             padding: 15px;
             border-radius: 5px;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 12px;
@@ -77,12 +95,29 @@
             font-size: 18px;
             min-height: 50px;
         }
+        .api-response {
+            background: #f3e5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <div class="test-container">
-        <h1>🎤 Microphone Test</h1>
-        <p>Click the microphone button and speak. Your speech will be converted to text.</p>
+        <h1>🎤 Microphone Test - Server Transcription</h1>
+        <p>Test server-side audio transcription with detailed API debugging.</p>
+
+        <div class="mode-selector">
+            <strong>Mode:</strong>
+            <button id="webSpeechBtn" class="active">Web Speech API</button>
+            <button id="serverBtn">Server Transcription</button>
+        </div>
 
         <button id="micBtn" class="mic-button">🎤</button>
 
@@ -95,6 +130,11 @@
             <div id="transcript">Nothing recorded yet...</div>
         </div>
 
+        <div class="api-response">
+            <strong>API Response:</strong>
+            <div id="apiResponse">No API calls yet...</div>
+        </div>
+
         <div class="log">
             <strong>Debug Log:</strong>
             <div id="log"></div>
@@ -103,7 +143,13 @@
 
     <script>
         let recognition = null;
+        let mediaRecorder = null;
         let isRecording = false;
+        let mode = 'webspeech'; // 'webspeech' or 'server'
+
+        const API_BASE = window.location.hostname === 'localhost'
+            ? 'http://localhost:3500/api'
+            : '/api';
 
         function addLog(message, type = 'info') {
             const logDiv = document.getElementById('log');
@@ -121,8 +167,13 @@
             statusDiv.className = `status ${type}`;
         }
 
-        function initVoiceRecognition() {
-            addLog('Initializing voice recognition...');
+        function showAPIResponse(data) {
+            document.getElementById('apiResponse').textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Web Speech API Mode
+        function initWebSpeech() {
+            addLog('Initializing Web Speech API...');
             addLog(`webkitSpeechRecognition: ${'webkitSpeechRecognition' in window}`);
             addLog(`SpeechRecognition: ${'SpeechRecognition' in window}`);
 
@@ -163,7 +214,7 @@
                         document.getElementById('micBtn').classList.remove('recording');
                     };
 
-                    addLog('Voice recognition initialized successfully', 'success');
+                    addLog('Web Speech API initialized successfully', 'success');
                     updateStatus('✅ Ready! Click microphone to test', 'success');
                 } catch (error) {
                     addLog(`EXCEPTION: ${error.message}`, 'error');
@@ -171,37 +222,146 @@
                     recognition = null;
                 }
             } else {
-                addLog('Speech recognition NOT supported', 'error');
-                updateStatus('❌ Speech recognition not supported in this browser', 'error');
+                addLog('Web Speech API NOT supported', 'error');
+                updateStatus('❌ Web Speech API not supported in this browser', 'error');
                 recognition = null;
             }
         }
 
-        document.getElementById('micBtn').addEventListener('click', () => {
-            addLog('Microphone button clicked');
+        // Server Transcription Mode
+        async function startServerRecording() {
+            try {
+                addLog('Requesting microphone access...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                addLog('Microphone access granted', 'success');
 
-            if (!recognition) {
-                addLog('Recognition not available', 'error');
-                updateStatus('❌ Voice recognition not available', 'error');
-                return;
+                mediaRecorder = new MediaRecorder(stream);
+                const audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                        addLog(`Audio chunk: ${event.data.size} bytes`);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    addLog('Recording stopped');
+                    isRecording = false;
+                    document.getElementById('micBtn').classList.remove('recording');
+
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    addLog(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`, 'success');
+
+                    updateStatus('📤 Sending to server for transcription...', 'info');
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'recording.webm');
+
+                        addLog(`Sending POST to ${API_BASE}/transcribe`);
+                        const response = await fetch(`${API_BASE}/transcribe`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        addLog(`Response status: ${response.status} ${response.statusText}`);
+
+                        const result = await response.json();
+                        addLog(`Response received`, 'success');
+                        showAPIResponse(result);
+
+                        if (result.success && result.text) {
+                            addLog(`Transcription: "${result.text}"`, 'success');
+                            document.getElementById('transcript').textContent = result.text;
+                            updateStatus('✅ Transcription successful!', 'success');
+                        } else {
+                            addLog(`Transcription failed: ${result.error || result.message}`, 'error');
+                            updateStatus(`❌ ${result.error || result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        addLog(`Network error: ${error.message}`, 'error');
+                        updateStatus(`❌ Network error: ${error.message}`, 'error');
+                        showAPIResponse({ error: error.message, stack: error.stack });
+                    }
+
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                document.getElementById('micBtn').classList.add('recording');
+                addLog('Recording started', 'success');
+                updateStatus('🎤 Recording... Speak now!', 'success');
+
+                // Auto-stop after 5 seconds
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        addLog('Auto-stopping after 5 seconds');
+                        mediaRecorder.stop();
+                    }
+                }, 5000);
+
+            } catch (error) {
+                addLog(`Microphone error: ${error.message}`, 'error');
+                updateStatus(`❌ Microphone error: ${error.message}`, 'error');
+                isRecording = false;
             }
+        }
 
-            if (isRecording) {
-                addLog('Stopping recording');
-                recognition.stop();
-            } else {
-                addLog('Starting recording');
-                try {
-                    recognition.start();
-                } catch (error) {
-                    addLog(`EXCEPTION starting: ${error.message}`, 'error');
-                    updateStatus(`❌ Error: ${error.message}`, 'error');
+        // Button handlers
+        document.getElementById('webSpeechBtn').addEventListener('click', () => {
+            mode = 'webspeech';
+            document.getElementById('webSpeechBtn').classList.add('active');
+            document.getElementById('serverBtn').classList.remove('active');
+            addLog('Switched to Web Speech API mode');
+            initWebSpeech();
+        });
+
+        document.getElementById('serverBtn').addEventListener('click', () => {
+            mode = 'server';
+            document.getElementById('serverBtn').classList.add('active');
+            document.getElementById('webSpeechBtn').classList.remove('active');
+            addLog('Switched to Server Transcription mode');
+            updateStatus('✅ Ready! Click microphone to test', 'success');
+        });
+
+        document.getElementById('micBtn').addEventListener('click', () => {
+            addLog(`Microphone button clicked (mode: ${mode})`);
+
+            if (mode === 'webspeech') {
+                if (!recognition) {
+                    addLog('Recognition not available', 'error');
+                    updateStatus('❌ Voice recognition not available', 'error');
+                    return;
+                }
+
+                if (isRecording) {
+                    addLog('Stopping Web Speech API');
+                    recognition.stop();
+                } else {
+                    addLog('Starting Web Speech API');
+                    try {
+                        recognition.start();
+                    } catch (error) {
+                        addLog(`EXCEPTION: ${error.message}`, 'error');
+                        updateStatus(`❌ Error: ${error.message}`, 'error');
+                    }
+                }
+            } else if (mode === 'server') {
+                if (isRecording) {
+                    addLog('Already recording, please wait...');
+                } else {
+                    startServerRecording();
                 }
             }
         });
 
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', initVoiceRecognition);
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('Page loaded');
+            initWebSpeech();
+        });
     </script>
 </body>
 </html>
