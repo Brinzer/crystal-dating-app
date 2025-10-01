@@ -54,7 +54,7 @@ function initVoiceRecognition() {
         };
     } else {
         console.log('Speech recognition not supported');
-        document.getElementById('voiceBtn').style.display = 'none';
+        // Don't hide the button - show it but display an error if clicked
     }
 }
 
@@ -74,7 +74,10 @@ function initEventListeners() {
 }
 
 function toggleVoiceInput() {
-    if (!recognition) return;
+    if (!recognition) {
+        addChrisMessage("Voice input isn't supported in your browser. You can type your responses instead!");
+        return;
+    }
 
     if (isRecording) {
         recognition.stop();
