@@ -30,15 +30,18 @@
         }
 
         .chris-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 100px;
+            height: 100px;
             margin: 0 auto 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+        }
+
+        .chris-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .messages {
@@ -46,6 +49,7 @@
             overflow-y: auto;
             margin-bottom: 20px;
             padding: 10px;
+            max-height: 400px;
         }
 
         .message {
@@ -221,7 +225,7 @@
     <header>
         <div class="container">
             <div class="logo">
-                <div class="crystal-icon">💎</div>
+                <img src="assets/crystal-logo.png" alt="Crystal Dating Logo" class="crystal-icon" style="width: 50px; height: 50px;">
                 <h1>Crystal Dating</h1>
             </div>
             <div class="tagline">Let's get to know you!</div>
@@ -231,7 +235,9 @@
     <main class="onboarding-container">
         <div class="chat-container">
             <div class="chris-header">
-                <div class="chris-avatar">👤</div>
+                <div class="chris-avatar">
+                    <img src="assets/chris-openheart.png" alt="Chris Openheart">
+                </div>
                 <h2>Chat with Chris Openheart</h2>
                 <p style="color: #666; font-size: 14px;">Your friendly guide to finding meaningful connections</p>
             </div>

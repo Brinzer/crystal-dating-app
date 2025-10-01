@@ -86,14 +86,30 @@ function toggleVoiceInput() {
 }
 
 function startConversation() {
+    // Get name from session storage (from signup)
+    const signupName = sessionStorage.getItem('signupName');
+
     setTimeout(() => {
-        addChrisMessage("Hey there! I'm Chris Openheart, and I'm here to help you create your Crystal Dating profile. 😊");
-        setTimeout(() => {
-            addChrisMessage("This will be super casual - just chat with me naturally, and I'll help you set everything up. Ready to start?");
+        if (signupName) {
+            addChrisMessage(`Hello, ${signupName}! I'm Chris Openheart, and I'm here to help you create your Crystal Dating profile. 😊`);
             setTimeout(() => {
-                askNextQuestion();
-            }, 1500);
-        }, 2000);
+                addChrisMessage("Would you like me to call you something else, or is that name perfect? I won't change your profile name - nobody else will see another name - but if you want a true name that feels better, I'm here to change it for you. I want to make sure you feel comfortable throughout this process, because boy are we in for it!");
+                setTimeout(() => {
+                    // Skip to step 1 since we already have name
+                    conversationState.userData.display_name = signupName;
+                    conversationState.step = 1;
+                    askNextQuestion();
+                }, 2000);
+            }, 2000);
+        } else {
+            addChrisMessage("Hey there! I'm Chris Openheart, and I'm here to help you create your Crystal Dating profile. 😊");
+            setTimeout(() => {
+                addChrisMessage("This will be super casual - just chat with me naturally, and I'll help you set everything up. Ready to start?");
+                setTimeout(() => {
+                    askNextQuestion();
+                }, 1500);
+            }, 2000);
+        }
     }, 500);
 }
 
