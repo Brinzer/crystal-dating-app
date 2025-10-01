@@ -176,16 +176,45 @@ async function startVoskRecording() {
             }
         };
 
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
             console.log('Recording stopped, audio captured');
             isRecording = false;
             document.getElementById('voiceBtn').classList.remove('recording');
 
+            // Create audio blob from recorded chunks
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            console.log(`Audio blob created: ${audioBlob.size} bytes`);
+
+            // Send to server for transcription
+            addChrisMessage("Processing your speech...");
+
+            try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                const response = await fetch(`${API_BASE}/transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.text) {
+                    console.log('Transcription successful:', result.text);
+                    // Add as user message and process
+                    addUserMessage(result.text);
+                    handleUserInput(result.text);
+                } else {
+                    console.error('Transcription failed:', result);
+                    addChrisMessage("I couldn't quite understand that. Could you try again or type your response? 😊");
+                }
+            } catch (error) {
+                console.error('Transcription error:', error);
+                addChrisMessage("Sorry, there was an issue processing your speech. Please type your response instead. 😊");
+            }
+
             // Clean up
             stream.getTracks().forEach(track => track.stop());
-
-            // For browsers without Web Speech API, provide helpful message
-            addChrisMessage("Got it! (Voice recognition works best in Chrome or Edge. For now, please type your response below.) 😊");
         };
 
         // Store for cleanup

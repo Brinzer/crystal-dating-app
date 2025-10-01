@@ -7,6 +7,8 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+const { HfInference } = require('@huggingface/inference');
 
 const matchingEngine = require('../algorithms/matchingEngine');
 
@@ -40,6 +42,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Configure multer for audio file uploads (in-memory storage)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 } // 25MB max
+});
 
 // Serve static files from client directory
 app.use(express.static(path.join(__dirname, '../client')));
@@ -407,6 +415,46 @@ app.get('/api/compatibility', (req, res) => {
 // ============================================
 
 // Redirect root to login page
+// ============================================
+// VOICE TRANSCRIPTION ENDPOINT
+// ============================================
+
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    // Initialize Hugging Face Inference API
+    // Note: HF_TOKEN should be in environment variables
+    // For free tier, we use the public inference API
+    const hf = new HfInference(process.env.HF_TOKEN);
+
+    console.log(`🎤 Transcribing audio: ${req.file.size} bytes, ${req.file.mimetype}`);
+
+    // Use Whisper model for transcription
+    const result = await hf.automaticSpeechRecognition({
+      data: req.file.buffer,
+      model: 'openai/whisper-base' // Using base model for faster free-tier inference
+    });
+
+    console.log(`✅ Transcription: "${result.text}"`);
+
+    res.json({
+      success: true,
+      text: result.text || ''
+    });
+
+  } catch (error) {
+    console.error('Transcription error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Transcription failed',
+      message: error.message
+    });
+  }
+});
+
 app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
