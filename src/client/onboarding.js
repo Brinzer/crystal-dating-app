@@ -127,8 +127,8 @@ async function toggleVoiceInput() {
 
     if (isRecording) {
         console.log('Stopping recording');
-        if (recognition === 'vosk' && mediaRecorder) {
-            mediaRecorder.stop();
+        if (recognition === 'vosk') {
+            stopVoskRecording();
         } else if (recognition.stop) {
             recognition.stop();
         }
@@ -162,42 +162,132 @@ async function startVoskRecording() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('Microphone access granted');
 
-        // Create audio context and media recorder
+        // Create audio context for Vosk (requires 16kHz sample rate)
         audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
         const source = audioContext.createMediaStreamSource(stream);
 
-        // Simple recording with MediaRecorder
-        mediaRecorder = new MediaRecorder(stream);
-        const audioChunks = [];
+        // Initialize Vosk recognizer if not already done
+        if (!window.voskRecognizer) {
+            console.log('Loading Vosk model...');
+            addChrisMessage("Initializing voice recognition...");
 
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
+            try {
+                // Load small English model from CDN
+                const modelUrl = 'https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip';
+                const model = await Vosk.createModel(modelUrl);
+                window.voskRecognizer = new model.KaldiRecognizer(16000);
+                console.log('Vosk model loaded successfully');
+            } catch (modelError) {
+                console.error('Error loading Vosk model:', modelError);
+                addChrisMessage("Voice recognition isn't fully available in this browser. Please type your response instead! 😊");
+                stream.getTracks().forEach(track => track.stop());
+                return;
+            }
+        }
+
+        // Create script processor for audio processing
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        source.connect(processor);
+        processor.connect(audioContext.destination);
+
+        // Store recognized text in window scope so stopVoskRecording can access it
+        window.voskRecognizedText = '';
+
+        processor.onaudioprocess = (event) => {
+            if (isRecording && window.voskRecognizer) {
+                const audioData = event.inputBuffer.getChannelData(0);
+                const buffer = new Int16Array(audioData.length);
+
+                // Convert Float32 to Int16
+                for (let i = 0; i < audioData.length; i++) {
+                    buffer[i] = Math.max(-32768, Math.min(32767, audioData[i] * 32768));
+                }
+
+                // Feed audio to Vosk recognizer
+                try {
+                    const result = window.voskRecognizer.acceptWaveform(buffer);
+                    if (result) {
+                        const resultData = JSON.parse(window.voskRecognizer.result());
+                        if (resultData.text) {
+                            window.voskRecognizedText += (window.voskRecognizedText ? ' ' : '') + resultData.text;
+                            console.log('Vosk partial result:', resultData.text);
+                        }
+                    }
+                } catch (voskError) {
+                    console.error('Vosk processing error:', voskError);
+                }
+            }
         };
 
-        mediaRecorder.onstop = async () => {
-            console.log('Vosk recording stopped');
-            isRecording = false;
-            document.getElementById('voiceBtn').classList.remove('recording');
+        // Store for cleanup
+        window.voskStream = stream;
+        window.voskProcessor = processor;
 
-            // For now, just show a message that Vosk transcription is being implemented
-            // Full Vosk integration requires model loading which is complex
-            addChrisMessage("Voice recording completed! (Vosk transcription is being finalized - for now, please type your response)");
-
-            // Clean up
-            stream.getTracks().forEach(track => track.stop());
-            audioContext.close();
-        };
-
-        mediaRecorder.start();
         isRecording = true;
         document.getElementById('voiceBtn').classList.add('recording');
         console.log('Vosk recording started');
+
+        // Auto-stop after 10 seconds to prevent infinite recording
+        setTimeout(() => {
+            if (isRecording) {
+                stopVoskRecording();
+            }
+        }, 10000);
 
     } catch (error) {
         console.error('Error accessing microphone:', error);
         addChrisMessage("Couldn't access microphone. Please check permissions!");
         isRecording = false;
     }
+}
+
+function stopVoskRecording() {
+    console.log('Stopping Vosk recording...');
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+
+    // Get accumulated text
+    let recognizedText = window.voskRecognizedText || '';
+
+    // Get final result from Vosk
+    if (window.voskRecognizer) {
+        try {
+            const finalResult = JSON.parse(window.voskRecognizer.finalResult());
+            if (finalResult.text) {
+                recognizedText += (recognizedText ? ' ' : '') + finalResult.text;
+            }
+        } catch (error) {
+            console.error('Error getting final Vosk result:', error);
+        }
+    }
+
+    // Clean up audio resources
+    if (window.voskProcessor) {
+        window.voskProcessor.disconnect();
+        window.voskProcessor = null;
+    }
+    if (window.voskStream) {
+        window.voskStream.getTracks().forEach(track => track.stop());
+        window.voskStream = null;
+    }
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+
+    console.log('Vosk final transcription:', recognizedText);
+
+    // Handle the recognized text
+    if (recognizedText && recognizedText.trim()) {
+        // Add as user message and process
+        addUserMessage(recognizedText);
+        handleUserInput(recognizedText);
+    } else {
+        addChrisMessage("I didn't catch that. Could you try again or type your response? 😊");
+    }
+
+    // Clear for next recording
+    window.voskRecognizedText = '';
 }
 
 function startConversation() {
