@@ -49,7 +49,20 @@ const { firefox } = require('playwright');
 
   // Wait for auto-stop and API response
   console.log('\nWaiting for recording to complete and API response...');
-  await page.waitForTimeout(7000);
+
+  // Wait for either success or error in API response (max 30s)
+  try {
+    await page.waitForFunction(
+      () => {
+        const apiDiv = document.getElementById('apiResponse');
+        return apiDiv && apiDiv.textContent !== 'No API calls yet...';
+      },
+      { timeout: 30000 }
+    );
+    console.log('API response received!');
+  } catch (e) {
+    console.log('Timeout waiting for API response after 30s');
+  }
 
   await page.screenshot({ path: 'screenshots/mic-test-4-result.png', fullPage: true });
   console.log('Screenshot: mic-test-4-result.png');

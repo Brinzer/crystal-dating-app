@@ -427,55 +427,51 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
 
     console.log(`🎤 Transcribing audio: ${req.file.size} bytes, ${req.file.mimetype}`);
 
-    // Use Hugging Face Inference API directly with fetch
-    // Try multiple models in order of preference
+    // Use HF Inference API directly (not via client library to avoid fal-ai provider)
     const modelsToTry = [
-      'openai/whisper-tiny',
-      'openai/whisper-base',
-      'openai/whisper-small'
+      'openai/whisper-large-v3'
     ];
 
-    let response = null;
-    let lastError = null;
+    const errors = [];
 
     for (const model of modelsToTry) {
       try {
         console.log(`Trying model: ${model}`);
         const API_URL = `https://api-inference.huggingface.co/models/${model}`;
 
-        response = await fetch(API_URL, {
+        const response = await fetch(API_URL, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.HF_TOKEN}`
+            'Authorization': `Bearer ${process.env.HF_TOKEN}`,
+            'Content-Type': req.file.mimetype || 'audio/wav'
           },
           body: req.file.buffer
         });
 
-        if (response.ok) {
-          console.log(`✅ Success with model: ${model}`);
-          break;
-        } else {
+        if (!response.ok) {
           const errorText = await response.text();
-          console.log(`❌ Model ${model} failed: ${response.status} - ${errorText.substring(0, 200)}`);
-          lastError = errorText;
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
+
+        const result = await response.json();
+        console.log(`✅ Success with model: ${model}`);
+        console.log(`✅ Transcription result:`, result);
+
+        res.json({
+          success: true,
+          text: result.text || '',
+          model: model
+        });
+        return;
+
       } catch (error) {
-        console.log(`❌ Model ${model} error: ${error.message}`);
-        lastError = error.message;
+        console.log(`❌ Model ${model} failed: ${error.message}`);
+        errors.push({ model, error: error.message });
       }
     }
 
-    if (!response || !response.ok) {
-      throw new Error(`All models failed. Last error: ${lastError}`);
-    }
-
-    const result = await response.json();
-    console.log(`✅ Transcription result:`, result);
-
-    res.json({
-      success: true,
-      text: result.text || ''
-    });
+    // All models failed
+    throw new Error(`All models failed: ${JSON.stringify(errors)}`);
 
   } catch (error) {
     console.error('Transcription error:', error);
